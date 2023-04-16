@@ -1,0 +1,36 @@
+version: '3.9'
+services:
+  manager:
+    container_name: manager
+    hostname: manager
+    environment:
+      - WORKER1_URL=http://worker1:8081
+    build: 
+      context: ./crackhash
+      args:
+        JAR_FILE: build/libs/*.jar
+    ports:
+      - "8080:8080"
+    networks:
+      crackhash-network:
+        aliases:
+          - manager
+  worker1:
+    container_name: worker1
+    hostname: worker1
+    environment:
+      - MANAGER_URL=http://manager:8080
+    build: 
+      context: ./worker1
+      args:
+        JAR_FILE: build/libs/*.jar
+    ports:
+      - "8081:8081"
+    networks:
+      crackhash-network:
+        aliases:
+          - worker1
+
+networks:
+  crackhash-network:
+    driver: bridge

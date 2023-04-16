@@ -7,6 +7,7 @@ import com.example.crackhash.utils.AppConfig;
 import com.example.crackhash.model.CrackHashManagerRequest;
 import com.example.crackhash.model.CrackHashWorkerResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -22,6 +23,9 @@ import java.util.HashMap;
 @Service
 public class ManagerService {
 
+    @Autowired
+    private Environment env;
+
     public void sendTask(String requestId, String hash, int maxLength) throws JAXBException {
         RestTemplate restTemplate = new RestTemplate();
 
@@ -35,8 +39,14 @@ public class ManagerService {
             objToSend.setPartNumber(i);
             HttpEntity<String> request = createRequestToWorker(objToSend);
             String url = String.format("http://localhost:%d/internal/api/worker/hash/crack/task", 8081 + i);
-            ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
-            System.out.println(response.getBody());
+            //String workerNumber =  String.format("WORKER%d_URL", i + 1);
+            //String url = String.format("%s/internal/api/worker/hash/crack/task", env.getProperty(workerNumber));
+            try {
+                ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
+                System.out.println(response.getBody());
+            } catch (Exception e) {
+                throw new Error(String.format("Could not establish connection with worker %d", i + 1));
+            }
         }
     }
 

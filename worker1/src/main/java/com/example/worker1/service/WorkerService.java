@@ -2,13 +2,13 @@ package com.example.worker1.service;
 
 import com.example.worker1.model.CrackHashManagerRequest;
 import com.example.worker1.model.CrackHashWorkerResponse;
-import com.example.worker1.utils.WorkerThread;
 import org.paukov.combinatorics.Generator;
 import org.paukov.combinatorics.ICombinatoricsVector;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,36 +25,32 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static org.paukov.combinatorics.CombinatoricsFactory.createPermutationWithRepetitionGenerator;
 import static org.paukov.combinatorics.CombinatoricsFactory.createVector;
 
 @Service
 public class WorkerService {
-    private String requestId;
-    private int partNumber;
-    private int partCount;
-    private String hash;
-    private int maxLength;
-    private String alphabet;
 
-    public void readXml(String xml) throws JAXBException {
+    @Autowired
+    private Environment env;
+
+    public CrackHashManagerRequest readXml(String xml) throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(CrackHashManagerRequest.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
         StringReader reader = new StringReader(xml);
         CrackHashManagerRequest request = (CrackHashManagerRequest) unmarshaller.unmarshal(reader);
-        this.requestId = request.getRequestId();
-        this.hash = request.getHash();
-        this.maxLength = request.getMaxLength();
-        this.alphabet = request.getAlphabet();
-        this.partNumber = request.getPartNumber();
-        this.partCount = request.getPartCount();
+        return request;
     }
 
-    public List<String> getCrackedWords() {
+    public List<String> getCrackedWords(CrackHashManagerRequest crackRequest) {
         List<String> words = new ArrayList<>();
+        String alphabet = crackRequest.getAlphabet();
+        String requestId = crackRequest.getRequestId();
+        String hash = crackRequest.getHash();
+        int maxLength = crackRequest.getMaxLength();
+        int partNumber = crackRequest.getPartNumber();
+        int partCount = crackRequest.getPartCount();
         /*ExecutorService executor = Executors.newFixedThreadPool(maxLength);
         for (int curLength = maxLength; curLength >= 1; --curLength) {
             Runnable worker = new WorkerThread(words, alphabet, partNumber, partNumber, hash, curLength);
@@ -62,8 +58,8 @@ public class WorkerService {
         }
         executor.shutdown();
         while (!executor.isTerminated()) {}*/
-        System.out.println("start");
-        for(int curLength = 1; curLength <= this.maxLength; ++curLength){
+        System.out.println("start crack " + requestId);
+        for(int curLength = 1; curLength <= maxLength; ++curLength){
             ICombinatoricsVector<String> vector = createVector(alphabet.split(""));
             Generator<String> gen = createPermutationWithRepetitionGenerator(vector, curLength);
             Iterator<ICombinatoricsVector<String>> iterator = gen.iterator();
@@ -82,7 +78,7 @@ public class WorkerService {
                 }
             }
         }
-        System.out.println("finish");
+        System.out.println("finish crack " + requestId);
         return words;
     }
 
@@ -98,14 +94,15 @@ public class WorkerService {
         }
     }
 
-    public void sendResult(List<String> words) throws JAXBException {
+    public void sendResult(List<String> words, String requestId, int partNumber) throws JAXBException {
         CrackHashWorkerResponse objToSend = new CrackHashWorkerResponse();
         RestTemplate restTemplate = new RestTemplate();
         objToSend.setAnswers(words);
-        objToSend.setPartNumber(this.partNumber);
-        objToSend.setRequestId(this.requestId);
+        objToSend.setPartNumber(partNumber);
+        objToSend.setRequestId(requestId);
         HttpEntity<String> request = createRequest(objToSend);
         String url = "http://localhost:8080/internal/api/manager/hash/crack/request";
+        //String url = String.format("%s/internal/api/manager/hash/crack/request", env.getProperty("MANAGER_URL"));
         restTemplate.postForEntity(url, request, String.class);
     }
 
