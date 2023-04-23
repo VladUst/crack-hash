@@ -3,6 +3,7 @@ plugins {
     id 'java-library'
     id 'org.springframework.boot' version '3.0.4'
     id 'io.spring.dependency-management' version '1.1.0'
+    id 'com.intershop.gradle.jaxb' version '5.2.1'
 }
 
 group = 'com.example'
@@ -20,8 +21,26 @@ dependencies {
     implementation 'com.sun.xml.bind:jaxb-impl:2.3.0.1'
     implementation 'org.glassfish.jaxb:jaxb-runtime:2.3.1'
     implementation 'com.googlecode.combinatoricslib:combinatoricslib:2.3'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+}
+
+jaxb {
+    javaGen {
+        crackHashManagerSchema {
+            outputDir = file("src/main/java")
+            packageName = 'com.example.manager.schemes'
+            schema = file('src/main/resources/xsd/CrackHashManagerSchema.xsd')
+        }
+        CrackHashWorkerSchema {
+            outputDir = file("src/main/java")
+            packageName = 'com.example.manager.schemes'
+            schema = file('src/main/resources/xsd/CrackHashWorkerSchema.xsd')
+        }
+    }
 }
 
 tasks.named('test') {

@@ -6,7 +6,7 @@ services:
     environment:
       - WORKER1_URL=http://worker1:8081
     build: 
-      context: ./crackhash
+      context: ./manager
       args:
         JAR_FILE: build/libs/*.jar
     ports:

@@ -1,8 +1,12 @@
 package com.example.manager.model;
 
-import java.util.List;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
+@Document
 public class RequestState {
+    @Id
     private String requestId;
     private RequestStatus status;
     private List<String> data;

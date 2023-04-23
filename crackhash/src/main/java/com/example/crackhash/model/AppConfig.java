@@ -1,4 +1,4 @@
-package com.example.crackhash.utils;
+package com.example.manager.model;
 
 public class AppConfig {
     public static final int WORKERS_NUMBER = 1;

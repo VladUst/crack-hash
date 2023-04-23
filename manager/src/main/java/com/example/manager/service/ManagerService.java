@@ -1,13 +1,16 @@
 package com.example.manager.service;
 
-import com.example.manager.model.AppConfig;
-import com.example.manager.model.CrackHashManagerRequest;
+import com.example.manager.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -30,9 +33,9 @@ public class ManagerService {
             objToSend.setPartCount(AppConfig.WORKERS_NUMBER);
             objToSend.setPartNumber(i);
             HttpEntity<String> request = createRequestToWorker(objToSend);
-            //String url = String.format("http://localhost:%d/internal/api/worker/hash/crack/task", 8081 + i);
-            String workerNumber =  String.format("WORKER%d_URL", i + 1);
-            String url = String.format("%s/internal/api/worker/hash/crack/task", env.getProperty(workerNumber));
+            String url = String.format("http://localhost:%d/internal/api/worker/hash/crack/task", 8081 + i);
+            //String workerNumber =  String.format("WORKER%d_URL", i + 1);
+            //String url = String.format("%s/internal/api/worker/hash/crack/task", env.getProperty(workerNumber));
             try {
                 ResponseEntity<String> response = restTemplate.postForEntity(url, request, String.class);
                 System.out.println(response.getBody());
